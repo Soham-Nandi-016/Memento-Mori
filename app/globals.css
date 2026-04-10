@@ -1,0 +1,295 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================
+   STITCH DESIGN DNA — PROJECT 903551207934110541
+   Extracted 2026-04-08 | Theme: Cyber-Ethereal Digital Stewardship
+   Creative North Star: "The Ethereal Archivist"
+   ============================================================= */
+
+:root {
+  /* ── Typography ─────────────────────────────────────────── */
+  --font-inter:       'Inter', system-ui, sans-serif;
+  --font-mono:        'JetBrains Mono', monospace;
+  --font-label:       'Space Grotesk', sans-serif;
+
+  /* ── Primary (Electric Cyan — Logic & Autonomous Actions) ── */
+  --primary:              #dbfcff;   /* on-surface text for primary elements */
+  --primary-container:    #00f0ff;   /* bioluminescent CTA fill */
+  --primary-fixed:        #7df4ff;
+  --primary-fixed-dim:    #00dbe9;
+  --on-primary:           #00363a;
+  --on-primary-container: #006970;
+  --surface-tint:         #00dbe9;
+
+  /* ── Secondary (Soft Violet — Soul & Human Memory) ────────── */
+  --secondary:              #e9b3ff;
+  --secondary-container:    #7d01b1;
+  --secondary-fixed:        #f6d9ff;
+  --secondary-fixed-dim:    #e9b3ff;
+  --on-secondary:           #510074;
+  --on-secondary-container: #e5a9ff;
+
+  /* ── Tertiary (Electric Blue) ────────────────────────────── */
+  --tertiary:           #f4f5ff;     /* near-white, editorial text */
+  --tertiary-container: #c8daff;
+  --on-tertiary:        #003064;
+
+  /* ── Surfaces — Midnight Blue Depth ─────────────────────── */
+  --background:                  #0c1324;  /* canvas / void */
+  --surface:                     #0c1324;
+  --surface-dim:                 #0c1324;
+  --surface-bright:              #33394c;
+  --surface-container-lowest:    #070d1f;  /* deepest / sunken */
+  --surface-container-low:       #151b2d;
+  --surface-container:           #191f31;  /* glassmorphism base */
+  --surface-container-high:      #23293c;
+  --surface-container-highest:   #2e3447;
+  --surface-variant:             #2e3447;
+
+  /* ── On-Surface Text ─────────────────────────────────────── */
+  --on-surface:         #dce1fb;   /* primary text — never pure white */
+  --on-surface-variant: #b9cacb;   /* secondary text */
+  --on-background:      #dce1fb;
+
+  /* ── Outline (Ghost Border only) ─────────────────────────── */
+  --outline:         #849495;
+  --outline-variant: #3b494b;      /* at 15% opacity max */
+
+  /* ── Semantic / Error ─────────────────────────────────────── */
+  --error:           #ffb4ab;
+  --error-container: #93000a;
+  --on-error:        #690005;
+
+  /* ── Override primaries from Stitch color variant ─────────── */
+  --accent-cyan:     #00F0FF;   /* overridePrimaryColor */
+  --accent-violet:   #BF5AF2;   /* overrideSecondaryColor */
+  --accent-blue:     #0A84FF;   /* overrideTertiaryColor */
+  --neutral-deep:    #020617;   /* overrideNeutralColor */
+
+  /* ── Elevation / Shadow spec ─────────────────────────────── */
+  --shadow-float:    0 20px 40px -10px rgba(0, 219, 233, 0.08);
+
+  /* ── Corner Radii (xl = 24px strictly for major containers) ─ */
+  --radius-xl:    1.5rem;   /* 24px — major containers */
+  --radius-lg:    1rem;     /* 16px — cards */
+  --radius-md:    0.5rem;   /* 8px — small chips */
+  --radius-sm:    0.25rem;  /* 4px — micro elements */
+
+  /* ── Glassmorphism spec ───────────────────────────────────── */
+  --glass-bg:       rgba(25, 31, 49, 0.72);    /* surface-container 72% */
+  --glass-blur:     24px;                       /* backdrop-blur-xl */
+  --glass-border:   rgba(59, 73, 75, 0.15);    /* outline-variant @ 15% */
+}
+
+/* ── Reset ───────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--background);
+  color: var(--on-surface);
+  font-family: var(--font-inter);
+  font-size: 16px;
+  line-height: 1.6;   /* Ethereal breathability */
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--surface-container-lowest); }
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.25);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.5); }
+
+/* ── Surface Layers (no borders — tonal depth only) ─────────── */
+.bg-canvas         { background-color: var(--background); }
+.bg-surface-low    { background-color: var(--surface-container-low); }
+.bg-surface        { background-color: var(--surface-container); }
+.bg-surface-high   { background-color: var(--surface-container-high); }
+.bg-surface-sunken { background-color: var(--surface-container-lowest); }
+
+/* ── Ambient Mesh Background ─────────────────────────────────── */
+.bg-mesh {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse 70% 45% at 15% 8%, rgba(0, 240, 255, 0.055) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 40% at 85% 85%, rgba(191, 90, 242, 0.05) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(10, 132, 255, 0.025) 0%, transparent 60%);
+}
+
+/* ── Glassmorphism — "The Glass & Gradient Rule" ─────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  /* Ghost border: outline-variant @ 15% — felt, not seen */
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+}
+
+/* Elevated glass — surface-container-high tint */
+.glass-elevated {
+  background: rgba(35, 41, 60, 0.75);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow:
+    var(--shadow-float),
+    inset 0 0 0 1px var(--glass-border);
+}
+
+/* Sunken glass — for log containers */
+.glass-sunken {
+  background: rgba(7, 13, 31, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* 5% primary tint per spec */
+  background-image: radial-gradient(ellipse 100% 100% at 50% 0%, rgba(0,240,255,0.05) 0%, transparent 60%);
+}
+
+/* ── Typography Classes ──────────────────────────────────────── */
+.font-label { font-family: var(--font-label); }
+.font-mono  { font-family: var(--font-mono); }
+
+/* Display — emotional anchors */
+.text-display {
+  font-family: var(--font-inter);
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;   /* tighter kern = premium */
+  line-height: 1.1;
+  color: var(--on-surface);
+}
+
+/* ── Glow Text (bioluminescent) ──────────────────────────────── */
+.text-primary-glow {
+  color: var(--accent-cyan);
+  text-shadow:
+    0 0 18px rgba(0, 240, 255, 0.55),
+    0 0 40px rgba(0, 240, 255, 0.18);
+}
+.text-secondary-glow {
+  color: var(--accent-violet);
+  text-shadow:
+    0 0 18px rgba(191, 90, 242, 0.55),
+    0 0 40px rgba(191, 90, 242, 0.18);
+}
+
+/* ── CTA Gradient (135° primary → primary-container) ─────────── */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+  color: var(--on-primary);
+  border-radius: 999px;       /* rounded-full */
+  border: none;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: filter 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 0 28px rgba(0, 240, 255, 0.3), 0 8px 20px rgba(0, 240, 255, 0.12);
+}
+.btn-primary:active { transform: translateY(0); }
+
+/* Secondary button */
+.btn-secondary {
+  background: var(--surface-container-high);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.2); /* primary ghost border 20% */
+  color: var(--primary);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover {
+  box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.4);
+  background: var(--surface-container-highest);
+}
+
+/* Tertiary / access-code style */
+.btn-tertiary {
+  background: transparent;
+  color: var(--secondary);
+  font-family: var(--font-mono);
+  transition: color 0.2s ease;
+}
+.btn-tertiary:hover { color: var(--secondary-fixed); }
+
+/* ── Input Fields ─────────────────────────────────────────────── */
+.input-field {
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+  font-family: var(--font-inter);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.input-field:focus {
+  background: var(--surface-container-high);
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--glass-border), 0 0 0 4px rgba(0, 240, 255, 0.12);
+}
+
+/* ── Scanline overlay (ambient) ──────────────────────────────── */
+@keyframes scanline-drift {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+.scanline::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent-cyan) 50%, transparent 100%);
+  opacity: 0.08;
+  animation: scanline-drift 10s linear infinite;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Terminal cursor blink ────────────────────────────────────── */
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.cursor-blink { animation: cursor-blink 1s step-end infinite; }
+
+/* ── Node pulse animation ─────────────────────────────────────── */
+@keyframes node-breathe {
+  0%, 100% { transform: scale(1);    opacity: 0.7; }
+  50%       { transform: scale(1.06); opacity: 1; }
+}
+.node-pulse { animation: node-breathe 3.5s ease-in-out infinite; }
+
+/* ── Float animation ──────────────────────────────────────────── */
+@keyframes float-up {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+.animate-float { animation: float-up 7s ease-in-out infinite; }
+
+/* ── Tilt card (3D perspective) ──────────────────────────────── */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* ── Corner accent brackets ──────────────────────────────────── */
+.corner-bracket::before, .corner-bracket::after,
+.corner-bracket > span::before, .corner-bracket > span::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 10px;
+  border-color: var(--accent-cyan);
+  border-style: solid;
+  opacity: 0.35;
+}
