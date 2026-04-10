@@ -118,4 +118,33 @@ export const vaultService = {
     // TODO: Send trigger notification to executor contact
     throw new Error("triggerLegacyProtocols not yet implemented — PHASE 2");
   },
+
+  /**
+   * Executes the Phase 3 Asset Handover sequence to the Terminal.
+   */
+  async executeHandover(trustees: any[], addLine: (line: any) => void): Promise<void> {
+    const verifiedNames = trustees
+      .filter((t) => t.status === "Verified")
+      .map((t) => t.name)
+      .join(", ");
+    const dispatchName = verifiedNames || "[Verified Trustee Name]";
+
+    await new Promise((r) => setTimeout(r, 1500));
+    addLine({ content: "[SYSTEM] 2/3 CONSENSUS ACHIEVED. DECRYPTION KEYS AUTHORIZED.", type: "system" });
+
+    await new Promise((r) => setTimeout(r, 1500));
+    addLine({ content: "[VAULT] Unlocking Asset: 'Last_Will_And_Testament.pdf'...", type: "system" });
+
+    await new Promise((r) => setTimeout(r, 1500));
+    addLine({ content: `[VAULT] Dispatched to: ${dispatchName}.`, type: "system" });
+
+    await new Promise((r) => setTimeout(r, 1500));
+    addLine({ content: "[DECRYPT] Releasing Crypto-Vault: 1.42 BTC to Multi-sig Wallet.", type: "system" });
+
+    await new Promise((r) => setTimeout(r, 1500));
+    addLine({ content: "[PURGE] 412 objects tagged as 'PRIVATE' have been permanently scrubbed from linked providers.", type: "error" });
+
+    await new Promise((r) => setTimeout(r, 1500));
+    addLine({ content: "[COMPLETE] Estate Handover Successful. System standing down.", type: "system" });
+  },
 };

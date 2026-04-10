@@ -1,11 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { db } from "@/lib/firebase";
 import { useGlobalTimer } from "@/lib/GlobalTimerContext";
 import { doc, collection, onSnapshot, addDoc, getDoc, Timestamp } from "firebase/firestore";
+import { useSyncContext } from "@/lib/SyncContext";
+import { vaultService } from "@/services/vaultService";
 
 function formatDiff(diff: number): string {
   if (diff <= 0) return "OVERDUE";
@@ -29,6 +31,20 @@ export default function VerificationHUD() {
   const { data: session, status } = useSession();
   const { countdown, handoverActive } = useGlobalTimer();
   const [trustees, setTrustees] = useState<TrusteeData[]>([]);
+  const { addLine } = useSyncContext();
+  const handoverTriggered = useRef(false);
+
+  // Derived consensus stats — no extra Firestore read
+  const totalTrustees = trustees.length;
+  const verifiedTrustees = trustees.filter((t: any) => t.status === "Verified").length;
+  const hasConsensus = totalTrustees > 0 && verifiedTrustees / totalTrustees >= 2 / 3;
+
+  useEffect(() => {
+    if (hasConsensus && !handoverTriggered.current) {
+      handoverTriggered.current = true;
+      vaultService.executeHandover(trustees, addLine);
+    }
+  }, [hasConsensus, trustees, addLine]);
 
   useEffect(() => {
     if (!session?.user?.email) return;
@@ -251,8 +267,57 @@ export default function VerificationHUD() {
         </button>
       </div>
 
-      {/* Right: Network stability + clock */}
+      {/* Right: Consensus badge + Network stability + clock */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+
+        {/* CONSENSUS badge */}
+        <motion.div
+          animate={hasConsensus ? { boxShadow: ["0 0 15px rgba(0,240,255,0.6)", "0 0 30px rgba(0,240,255,1)", "0 0 15px rgba(0,240,255,0.6)"] } : {}}
+          transition={{ duration: 2, repeat: Infinity }}
+          style={{
+            padding: "5px 12px",
+            borderRadius: "999px",
+            backgroundColor: totalTrustees === 0
+              ? "rgba(255,255,255,0.04)"
+              : hasConsensus
+              ? "rgba(0,240,255,0.08)"
+              : "rgba(251,191,36,0.08)",
+            border: `1px solid ${totalTrustees === 0
+              ? "rgba(255,255,255,0.08)"
+              : hasConsensus
+              ? "rgba(0,240,255,0.3)"
+              : "rgba(251,191,36,0.3)"}`,
+            display: "flex",
+            alignItems: "center",
+            gap: "7px",
+          }}
+        >
+          <motion.div
+            animate={hasConsensus ? { opacity: [0.5, 1, 0.5], scale: [0.9, 1.15, 0.9] } : { opacity: 0.5 }}
+            transition={{ duration: 1.6, repeat: Infinity }}
+            style={{
+              width: "6px", height: "6px", borderRadius: "50%",
+              backgroundColor: totalTrustees === 0 ? "rgba(255,255,255,0.2)" : hasConsensus ? "var(--accent-cyan, #00f0ff)" : "#fbbf24",
+              boxShadow: hasConsensus ? "0 0 8px rgba(0,240,255,0.6)" : totalTrustees > 0 ? "0 0 8px rgba(251,191,36,0.5)" : "none",
+            }}
+          />
+          <span
+            className="font-mono"
+            style={{
+              fontSize: "0.6rem",
+              letterSpacing: "0.08em",
+              fontWeight: 600,
+              color: totalTrustees === 0
+                ? "rgba(255,255,255,0.25)"
+                : hasConsensus
+                ? "var(--accent-cyan, #00f0ff)"
+                : "#fbbf24",
+            }}
+          >
+            {hasConsensus ? "🟢 PROTOCOL EXECUTED" : `CONSENSUS: ${verifiedTrustees}/${totalTrustees}`}
+          </span>
+        </motion.div>
+
         <div
           style={{
             padding: "5px 10px",

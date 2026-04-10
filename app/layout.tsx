@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/auth-provider";
 import { SyncProvider } from "@/lib/SyncContext";
 import { GlobalTimerProvider } from "@/lib/GlobalTimerContext";
 import VerificationHUD from "@/components/VerificationHUD";
+import ToastNotification from "@/components/ToastNotification";
 
 export const metadata: Metadata = {
   title: "Memento Mori — Autonomous Digital Legacy Agent",
@@ -35,6 +36,7 @@ export default function RootLayout({
             <SyncProvider>
               {children}
               <VerificationHUD />
+              <ToastNotification />
             </SyncProvider>
           </GlobalTimerProvider>
         </AuthProvider>

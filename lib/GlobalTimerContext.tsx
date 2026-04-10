@@ -3,14 +3,15 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import { db } from "@/lib/firebase";
-import { doc, onSnapshot, updateDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 
 interface TimerState {
   countdown: string;
   isSimulating: boolean;
   handoverActive: boolean;
   isOverrideActive: boolean;
-  startSimulation: () => void;
+  isRedlining: boolean;
+  handleSimulateInactivity: () => void;
   resetOverride: () => void;
 }
 
@@ -28,6 +29,7 @@ export function GlobalTimerProvider({ children }: { children: ReactNode }) {
   const [isSimulating, setIsSimulating] = useState(false);
   const [handoverActive, setHandoverActive] = useState(false);
   const [isOverrideActive, setIsOverrideActive] = useState(false);
+  const [isRedlining, setIsRedlining] = useState(false);
   const [deadlineMs, setDeadlineMs] = useState<number | null>(null);
   const [simStartTime, setSimStartTime] = useState<number | null>(null);
 
@@ -54,7 +56,9 @@ export function GlobalTimerProvider({ children }: { children: ReactNode }) {
     const unsubUser = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        if (data.lastSeen) {
+        if (data.nextCheckIn) {
+          setDeadlineMs(data.nextCheckIn.toDate().getTime());
+        } else if (data.lastSeen) {
           setDeadlineMs(data.lastSeen.toDate().getTime() + 14 * 86_400_000);
         }
         setIsOverrideActive(!!data.isOverrideActive);
@@ -66,7 +70,10 @@ export function GlobalTimerProvider({ children }: { children: ReactNode }) {
 
   // Global Countdown
   useEffect(() => {
-    if (!deadlineMs) return;
+    if (!session?.user?.email || !deadlineMs) {
+      setCountdown("SYSTEM READY // STANDBY");
+      return;
+    }
     const intervalTime = isSimulating ? 50 : 1000;
     
     const interval = setInterval(() => {
@@ -111,11 +118,50 @@ export function GlobalTimerProvider({ children }: { children: ReactNode }) {
       }
     }, intervalTime);
     return () => clearInterval(interval);
-  }, [deadlineMs, isSimulating, handoverActive, simStartTime]);
+  }, [deadlineMs, isSimulating, handoverActive, simStartTime, session?.user?.email]);
 
-  const startSimulation = () => {
+  const handleSimulateInactivity = async () => {
+    if (!session?.user?.email || !deadlineMs) return;
+
     setIsSimulating(true);
-    setSimStartTime(Date.now());
+    setIsRedlining(false);
+
+    const durationMs = 10000;
+    const startTime = Date.now();
+    const initialDiff = deadlineMs - startTime;
+
+    console.log("🔥 [SYSTEM] LINEAR 10-SECOND TIME-MELT TRIGGERED...");
+
+    const interval = setInterval(async () => {
+      const currentTime = Date.now();
+      const progress = Math.min((currentTime - startTime) / durationMs, 1);
+
+      if (progress >= 0.6) {
+        setIsRedlining(true);
+      }
+
+      const currentSimulatedDiff = initialDiff * (1 - progress);
+      setDeadlineMs(Date.now() + currentSimulatedDiff);
+
+      if (progress >= 1) {
+        clearInterval(interval);
+        console.log("🚨 [SYSTEM] ZERO BREACH REACHED. INITIATING NETWORK LOCK...");
+        
+        try {
+          const userDocRef = doc(db, "users", session.user.email!);
+          await setDoc(userDocRef, {
+            nextCheckIn: new Date(Date.now() - 1000)
+          }, { merge: true });
+          
+          console.log("🟢 [SYSTEM] PROTOCOL EXECUTED. FIRESTORE SYNCHRONIZED.");
+        } catch (error) {
+          console.error("Critical System Protocol Execution Failed:", error);
+        } finally {
+          setIsSimulating(false);
+          setIsRedlining(false);
+        }
+      }
+    }, 30);
   };
 
   const resetOverride = async () => {
@@ -128,14 +174,17 @@ export function GlobalTimerProvider({ children }: { children: ReactNode }) {
     setIsOverrideActive(false);
     setDeadlineMs(Date.now() + 14 * 86_400_000);
 
+    const now = new Date();
     await updateDoc(userDocRef, {
       isOverrideActive: false,
       lastSeen: serverTimestamp(),
+      lastCheckIn: now,
+      nextCheckIn: new Date(now.getTime() + 14 * 86_400_000),
     });
   };
 
   return (
-    <GlobalTimerContext.Provider value={{ countdown, isSimulating, handoverActive, isOverrideActive, startSimulation, resetOverride }}>
+    <GlobalTimerContext.Provider value={{ countdown, isSimulating, handoverActive, isOverrideActive, isRedlining, handleSimulateInactivity, resetOverride }}>
       {children}
     </GlobalTimerContext.Provider>
   );

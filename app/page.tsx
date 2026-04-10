@@ -5,6 +5,7 @@ import SentimentalStream from "@/components/SentimentalStream";
 import NodeGraph from "@/components/NodeGraph";
 import VerificationHUD from "@/components/VerificationHUD";
 import HUDHeader from "@/components/HUDHeader";
+import CheckInAction from "@/components/CheckInAction";
 
 /**
  * Memento Mori — Command Center (Pixel-Perfect Rebuild)
@@ -267,9 +268,10 @@ export default async function DashboardPage() {
                 maxWidth: "400px",
               }}
             >
-              The autonomous steward of your digital existence. Monitoring 4.2TB
+               The autonomous steward of your digital existence. Monitoring 4.2TB
               of sentimental assets across 12 decentralized encrypted vaults.
             </p>
+            <CheckInAction />
           </div>
         </section>
 

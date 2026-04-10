@@ -33,6 +33,7 @@ export interface SyncState {
 interface SyncContextValue extends SyncState {
   runScan: (token: string | null, batchNum: number) => Promise<void>;
   triggerBoot: () => void;
+  addLine: (line: Omit<TerminalLine, "id">) => void;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -243,6 +244,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         hasBoot,
         runScan,
         triggerBoot,
+        addLine,
       }}
     >
       {children}

@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import ExecutorSidebar from "@/components/ExecutorSidebar";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, addDoc, doc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { UserMinus } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -16,6 +16,8 @@ export default function TrusteesPage() {
   // Form State
   const [form, setForm] = useState({ name: "", role: "", email: "", phone: "", relationship: "" });
   const [isAdding, setIsAdding] = useState(false);
+  const [sendingPulse, setSendingPulse] = useState<string | null>(null);
+  const [simulatingId, setSimulatingId] = useState<string | null>(null);
 
   // Fetch real-time Trustees and Assets
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function TrusteesPage() {
         email: form.email,
         phone: form.phone,
         relationship: form.relationship,
-        status: "Verified", // Simulated auto-verification for demo purposes
+        status: "Pending", // Starts as Pending — verified via email or simulation
         createdAt: new Date().toISOString()
       });
       setForm({ name: "", role: "", email: "", phone: "", relationship: "" });
@@ -71,6 +73,62 @@ export default function TrusteesPage() {
       await deleteDoc(doc(db, "users", session.user.email, "trustees", id));
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleSimulateHandshake = async (trustee: any) => {
+    if (!session?.user?.email) return;
+    setSimulatingId(trustee.id);
+    try {
+      await updateDoc(doc(db, "users", session.user.email, "trustees", trustee.id), {
+        status: "Verified",
+      });
+      window.dispatchEvent(
+        new CustomEvent("show-toast", {
+          detail: { message: `Handshake simulated for ${trustee.name}. Status: VERIFIED.`, type: "success" },
+        })
+      );
+    } catch (err: any) {
+      window.dispatchEvent(
+        new CustomEvent("show-toast", {
+          detail: { message: err.message || "Simulation failed.", type: "error" },
+        })
+      );
+    } finally {
+      setSimulatingId(null);
+    }
+  };
+
+  const handleSendPulse = async (trustee: any) => {
+    if (!session?.user?.email || !trustee.email) return;
+    setSendingPulse(trustee.id);
+    try {
+      const res = await fetch("/api/send-pulse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trusteeEmail: trustee.email,
+          trusteeId: trustee.id,
+          userEmail: session.user.email,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Transmission failed");
+      }
+      window.dispatchEvent(
+        new CustomEvent("show-toast", {
+          detail: { message: `Pulse transmitted to ${trustee.name}.`, type: "success" },
+        })
+      );
+    } catch (err: any) {
+      window.dispatchEvent(
+        new CustomEvent("show-toast", {
+          detail: { message: err.message || "Transmission failed. Check relay.", type: "error" },
+        })
+      );
+    } finally {
+      setSendingPulse(null);
     }
   };
 
@@ -166,9 +224,41 @@ export default function TrusteesPage() {
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
-                  <div style={{ padding: "4px 8px", borderRadius: "4px", backgroundColor: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e", fontSize: "0.6rem", fontWeight: 600 }}>
-                    VERIFIED
-                  </div>
+                  {/* Dynamic status badge */}
+                  {t.status === "Verified" ? (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "5px",
+                        padding: "4px 10px", borderRadius: "4px",
+                        backgroundColor: "rgba(34,197,94,0.1)",
+                        border: "1px solid rgba(34,197,94,0.35)",
+                        color: "#22c55e", fontSize: "0.6rem", fontWeight: 600,
+                        boxShadow: "0 0 10px rgba(34,197,94,0.15)",
+                      }}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                        <path d="M2 5l2 2 4-4" stroke="#22c55e" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      IDENTITY CONFIRMED
+                    </motion.div>
+                  ) : (
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: "5px",
+                      padding: "4px 10px", borderRadius: "4px",
+                      backgroundColor: "rgba(251,191,36,0.08)",
+                      border: "1px solid rgba(251,191,36,0.25)",
+                      color: "#fbbf24", fontSize: "0.6rem", fontWeight: 600,
+                    }}>
+                      <motion.div
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1.8, repeat: Infinity }}
+                        style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: "#fbbf24" }}
+                      />
+                      PENDING
+                    </div>
+                  )}
                   <motion.button
                     onClick={() => handleDeauthorize(t.id)}
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(244,63,94,0.1)", color: "#f43f5e", borderColor: "rgba(244,63,94,0.4)", boxShadow: "0 0 10px rgba(244,63,94,0.3)" }}
@@ -197,9 +287,54 @@ export default function TrusteesPage() {
                 <span style={{ fontSize: "0.9rem", color: "var(--accent-cyan)", fontWeight: 700 }}>{getAssetCount(t.name)} SECURED</span>
               </div>
               
-              <motion.button whileHover={{ scale: 1.02 }} className="w-full mt-4" style={{ position: "relative", zIndex: 2, padding: "10px", backgroundColor: "rgba(0,240,255,0.05)", border: "1px solid rgba(0,240,255,0.15)", borderRadius: "var(--radius-md)", color: "var(--accent-cyan)", fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.05em" }}>
-                SEND VERIFICATION PULSE
-              </motion.button>
+              {/* Action buttons — only shown while Pending */}
+              {t.status !== "Verified" && (
+                <>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleSendPulse(t)}
+                    disabled={sendingPulse === t.id || !t.email}
+                    className="w-full mt-4"
+                    style={{
+                      position: "relative", zIndex: 2, padding: "10px",
+                      backgroundColor: sendingPulse === t.id ? "rgba(0,240,255,0.02)" : "rgba(0,240,255,0.05)",
+                      border: "1px solid rgba(0,240,255,0.15)",
+                      borderRadius: "var(--radius-md)",
+                      color: sendingPulse === t.id ? "rgba(0,240,255,0.4)" : "var(--accent-cyan)",
+                      fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.05em",
+                      cursor: sendingPulse === t.id ? "not-allowed" : "pointer",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {sendingPulse === t.id ? "TRANSMITTING..." : "SEND VERIFICATION PULSE"}
+                  </motion.button>
+
+                  {/* DEV-ONLY: Simulate Handshake */}
+                  {process.env.NODE_ENV === "development" && (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleSimulateHandshake(t)}
+                      disabled={simulatingId === t.id}
+                      className="w-full mt-2"
+                      style={{
+                        position: "relative", zIndex: 2, padding: "8px",
+                        backgroundColor: simulatingId === t.id ? "rgba(251,191,36,0.02)" : "rgba(251,191,36,0.06)",
+                        border: "1px solid rgba(251,191,36,0.2)",
+                        borderRadius: "var(--radius-md)",
+                        color: simulatingId === t.id ? "rgba(251,191,36,0.4)" : "#fbbf24",
+                        fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em",
+                        cursor: simulatingId === t.id ? "not-allowed" : "pointer",
+                        transition: "all 0.2s",
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {simulatingId === t.id ? "SIMULATING..." : "⚡ SIMULATE HANDSHAKE"}
+                    </motion.button>
+                  )}
+                </>
+              )}
             </div>
           ))}
           {trustees.length === 0 && (

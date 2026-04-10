@@ -10,7 +10,7 @@ import { useGlobalTimer } from "@/lib/GlobalTimerContext";
 export default function ProtocolsPage() {
   const { data: session } = useSession();
   const [securedAssets, setSecuredAssets] = useState<any[]>([]);
-  const { countdown, isSimulating, handoverActive, startSimulation } = useGlobalTimer();
+  const { countdown, isSimulating, handoverActive, isRedlining, handleSimulateInactivity } = useGlobalTimer();
 
   // Fetch secured assets
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function ProtocolsPage() {
           </div>
           
           <button 
-             onClick={startSimulation}
+             onClick={handleSimulateInactivity}
              disabled={isSimulating || handoverActive}
              className="font-mono flex items-center gap-2" 
              style={{ cursor: "pointer", opacity: (isSimulating || handoverActive) ? 0.5 : 1, padding: "8px 16px", borderRadius: "8px", backgroundColor: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.3)", color: "#f43f5e", fontSize: "0.7rem", letterSpacing: "0.05em", transition: "all 0.2s" }}
@@ -70,10 +70,10 @@ export default function ProtocolsPage() {
             border: handoverActive ? "1px solid rgba(244,63,94,0.3)" : "1px solid rgba(255,255,255,0.05)", boxShadow: handoverActive ? "0 0 30px rgba(244,63,94,0.15)" : "var(--shadow-float)", textAlign: "center",
             display: "flex", flexDirection: "column", alignItems: "center", transition: "all 0.5s ease"
           }}>
-            <div className="font-label" style={{ fontSize: "0.8rem", color: handoverActive ? "#f43f5e" : "var(--on-surface-variant)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px", animation: handoverActive ? "node-breathe 2s infinite" : "none" }}>
-              {handoverActive ? "DEAD MAN'S SWITCH : BREACHED" : "DEAD MAN'S SWITCH : ACTIVE"}
+            <div className="font-label" style={{ fontSize: "0.8rem", color: (handoverActive || isRedlining) ? "#f43f5e" : "var(--on-surface-variant)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px", animation: (handoverActive || isRedlining) ? "node-breathe 2s infinite" : "none" }}>
+              {handoverActive ? "DEAD MAN'S SWITCH : BREACHED" : isRedlining ? "SYSTEM OVERRIDE : CRITICAL" : "DEAD MAN'S SWITCH : ACTIVE"}
             </div>
-            <div className="font-mono" style={{ fontSize: "2.5rem", fontWeight: 700, color: handoverActive ? "#f43f5e" : "var(--accent-cyan)", letterSpacing: "0.05em", filter: handoverActive ? "drop-shadow(0 0 12px rgba(244,63,94,0.5))" : "drop-shadow(0 0 12px rgba(0,240,255,0.3))", transition: "color 0.5s ease" }}>
+            <div className="font-mono" style={{ fontSize: "2.5rem", fontWeight: 700, color: (handoverActive || isRedlining) ? "#f43f5e" : "var(--accent-cyan)", letterSpacing: "0.05em", filter: (handoverActive || isRedlining) ? "drop-shadow(0 0 12px rgba(244,63,94,0.5))" : "drop-shadow(0 0 12px rgba(0,240,255,0.3))", transition: "color 0.5s ease" }}>
               {countdown}
             </div>
             <p style={{ fontSize: "0.75rem", color: "var(--on-surface-variant)", marginTop: "12px", maxWidth: "400px", lineHeight: 1.6 }}>
