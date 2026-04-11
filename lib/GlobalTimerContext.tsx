@@ -148,7 +148,7 @@ export function GlobalTimerProvider({ children }: { children: ReactNode }) {
         console.log("🚨 [SYSTEM] ZERO BREACH REACHED. INITIATING NETWORK LOCK...");
         
         try {
-          const userDocRef = doc(db, "users", session.user.email!);
+          const userDocRef = doc(db, "users", session!.user!.email!);
           await setDoc(userDocRef, {
             nextCheckIn: new Date(Date.now() - 1000)
           }, { merge: true });

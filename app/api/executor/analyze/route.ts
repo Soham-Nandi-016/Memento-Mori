@@ -5,6 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: Request) {
   let files: any[] = [];
+  let trustees: any[] = [];
   
   try {
     const body = await req.json();
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid files array" }, { status: 400 });
     }
 
-    const trustees = body.trustees || [];
+    trustees = body.trustees || [];
     if (!trustees || trustees.length === 0) {
       return NextResponse.json({ error: "No active trustees found. Add trustees first." }, { status: 400 });
     }
